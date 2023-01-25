@@ -16,7 +16,8 @@
   "license": "ISC",
     "dependencies": {
     "express": "^4.17.1",
-    "mysql2": "^2.2.5"
+    "mysql2": "^2.2.5",
+    "sequelize": "^6.3.5"
   },
   "bugs": {
     "url": "https://github.com/sifrult/employee-tracker/issues"
