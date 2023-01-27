@@ -136,14 +136,23 @@ const addRole = () => {
     ])
     .then ((data) => {
         console.log(data.department);
-        const sql = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`;
-        const params = [data.title, data.salary, data.department];
 
-        db.query(sql, params, (err, result) => {
-            if (err) {
-                console.log(err);
-            }
+        // Selects the id associated with the selected department
+        const sql1 = `SELECT id FROM department WHERE name = '${data.department}'`
+
+        db.query(sql1, (err, res) => {
+            if (err) throw err;
+            var deptId = res[0].id;
+
+            // Inputs the title, salary, and department id
+            const sql = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`;
+            const params = [data.title, data.salary, deptId];
+
+            db.query(sql, params, (err, res) => {
+                if (err) throw err;
+            })
         })
+
         init();
     });
 
