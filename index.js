@@ -46,8 +46,7 @@ const init = () => {
                 viewDepts();
                 break;
             case 'View all roles':
-                console.log(data.options);
-                init();
+                viewRoles();
                 break;
             case 'View all employees':
                 console.log(data.options);
@@ -85,7 +84,14 @@ const viewDepts = () => {
 }
 
 // -------------- View all roles --------------
-
+const viewRoles = () => {
+    const sql = `SELECT role.id, role.title, department.name, role.salary FROM role JOIN department ON role.department_id = department.id`;
+    db.query(sql, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        init();
+    })
+}
 // -------------- View all employees --------------
 
 // -------------- Add a department --------------
