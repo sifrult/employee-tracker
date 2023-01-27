@@ -23,6 +23,7 @@ const db = mysql.createConnection(
 
 // Starting point for questions
 const init = () => {
+    console.log("--------------");
     inquirer .prompt([
         {
             type: 'list',
@@ -42,7 +43,7 @@ const init = () => {
     .then((data) => {
         switch(data.options) {
             case 'View all departments':
-                init();
+                viewDepts();
                 break;
             case 'View all roles':
                 console.log(data.options);
@@ -73,7 +74,21 @@ const init = () => {
     })
 }
 
-// Add a department
+// -------------- View all departments --------------
+const viewDepts = () => {
+    const sql = `SELECT * FROM department`;
+    db.query(sql, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        init();
+    })
+}
+
+// -------------- View all roles --------------
+
+// -------------- View all employees --------------
+
+// -------------- Add a department --------------
 const addDept = () => {
     inquirer .prompt([
         {
@@ -83,39 +98,32 @@ const addDept = () => {
         }
     ])
     .then ((data) => {
-        console.log(data.department);
         const sql = `INSERT INTO department (name) VALUES (?)`;
         const params = data.department;
 
-        db.query(sql, params, (err, result) => {
-            if (err) {
-                console.log(err);
-            }
+        db.query(sql, params, (err, res) => {
+            if (err) throw err;
         })
 
-
-        console.log(departmentOptions);
         init();
     });
-
-
 }
 
-// Add a role
+// -------------- Add a role --------------
 const addRole = () => {
 
+    // Selects all the department names and puts them in the variable
     var deptOptions = [];
 
     const sql = `SELECT * FROM department`;
     db.query(sql, (err, res) => {
-        if (err) {
-            console.log(err)
-        }
+        if (err) throw err;
         for (let i = 0; i < res.length; i++) {
             deptOptions.push(res[i].name)
         }
     })
 
+    // Questions for user
     inquirer .prompt([
         {
             type: 'input',
@@ -135,8 +143,6 @@ const addRole = () => {
         }
     ])
     .then ((data) => {
-        console.log(data.department);
-
         // Selects the id associated with the selected department
         const sql1 = `SELECT id FROM department WHERE name = '${data.department}'`
 
@@ -155,8 +161,11 @@ const addRole = () => {
 
         init();
     });
-
-
 }
 
+// -------------- Add an employee --------------
+
+// -------------- Update an employee role --------------
+
+// -------------- Runs the program --------------
 init();

@@ -14,9 +14,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-    "dependencies": {
-    "inquirer": "^8.2.4",
+  "dependencies": {
     "express": "^4.17.1",
+    "inquirer": "^8.2.4",
     "mysql2": "^2.2.5",
     "sequelize": "^6.3.5"
   },
