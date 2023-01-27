@@ -2,6 +2,7 @@ const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const express = require('express');
 
+
 const PORT = process.env.PORT || 3001;
 const app = express();
 
@@ -72,6 +73,7 @@ const init = () => {
     })
 }
 
+// Add a department
 const addDept = () => {
     inquirer .prompt([
         {
@@ -90,11 +92,30 @@ const addDept = () => {
                 console.log(err);
             }
         })
+
+
+        console.log(departmentOptions);
         init();
-    })
+    });
+
+
 }
 
+// Add a role
 const addRole = () => {
+
+    var deptOptions = [];
+
+    const sql = `SELECT * FROM department`;
+    db.query(sql, (err, res) => {
+        if (err) {
+            console.log(err)
+        }
+        for (let i = 0; i < res.length; i++) {
+            deptOptions.push(res[i].name)
+        }
+    })
+
     inquirer .prompt([
         {
             type: 'input',
@@ -107,9 +128,10 @@ const addRole = () => {
             message: 'What is the salary of the role?'
         },
         {
-            type: 'input',
+            type: 'list',
             name: 'department',
-            message: 'Which department does this role belong to?'
+            message: 'Which department does this role belong to?',
+            choices: deptOptions
         }
     ])
     .then ((data) => {
@@ -123,7 +145,9 @@ const addRole = () => {
             }
         })
         init();
-    })
+    });
+
+
 }
 
 init();
