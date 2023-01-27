@@ -1,8 +1,24 @@
-// const sequelize = require('./config/connection');
 const inquirer = require('inquirer');
-// const fs = require('fs');
-const answerOptions = require('./options/index');
+const mysql = require('mysql2');
+const express = require('express');
 
+const PORT = process.env.PORT || 3001;
+const app = express();
+
+// Express middleware
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+
+// Connect to database
+const db = mysql.createConnection(
+    {
+        host: '127.0.0.1',
+        user: 'root',
+        password: process.env.MYSQL_PASSWORD,
+        database: 'personnel_db'
+    },
+    console.log('Connected to the personnel_db database')
+);
 
 // Starting point for questions
 const init = () => {
@@ -23,12 +39,91 @@ const init = () => {
     ])
     // Choice response triggers functions inside folder >options
     .then((data) => {
-        if (data.options === 'Quit') {
-            console.log('Goodbye')
-        } else {
-            answerOptions(data);
-            init();
+        switch(data.options) {
+            case 'View all departments':
+                init();
+                break;
+            case 'View all roles':
+                console.log(data.options);
+                init();
+                break;
+            case 'View all employees':
+                console.log(data.options);
+                init();
+                break;
+            case 'Add a department':
+                addDept();
+                break;
+            case 'Add a role':
+                addRole();
+                break;
+            case 'Add an employee':
+                console.log(data.options);
+                init();
+                break;
+            case 'Update an employee role':
+                console.log(data.options);
+                init();
+                break;
+            case 'Quit':
+                console.log(data.options);
+                break;
         }
     })
 }
-    init();
+
+const addDept = () => {
+    inquirer .prompt([
+        {
+            type: 'input',
+            name: 'department',
+            message: 'What is the name of the department?'
+        }
+    ])
+    .then ((data) => {
+        console.log(data.department);
+        const sql = `INSERT INTO department (name) VALUES (?)`;
+        const params = data.department;
+
+        db.query(sql, params, (err, result) => {
+            if (err) {
+                console.log(err);
+            }
+        })
+        init();
+    })
+}
+
+const addRole = () => {
+    inquirer .prompt([
+        {
+            type: 'input',
+            name: 'title',
+            message: 'What is the name of the role?',
+        },
+        {
+            type: 'input',
+            name: 'salary',
+            message: 'What is the salary of the role?'
+        },
+        {
+            type: 'input',
+            name: 'department',
+            message: 'Which department does this role belong to?'
+        }
+    ])
+    .then ((data) => {
+        console.log(data.department);
+        const sql = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`;
+        const params = [data.title, data.salary, data.department];
+
+        db.query(sql, params, (err, result) => {
+            if (err) {
+                console.log(err);
+            }
+        })
+        init();
+    })
+}
+
+init();
