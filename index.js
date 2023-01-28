@@ -58,8 +58,7 @@ const init = () => {
                 addRole();
                 break;
             case 'Add an employee':
-                console.log(data.options);
-                init();
+                addEmployee();
                 break;
             case 'Update an employee role':
                 console.log(data.options);
@@ -93,8 +92,7 @@ const viewRoles = () => {
 }
 // -------------- View all employees --------------
 const viewEmployees = () => {
-    const sql = `SELECT A.id, A.first_name, A.last_name, role.title, department.name, role.salary, concat(B.first_name, ' ', B.last_name) AS manager FROM employee A JOIN role ON A.role_id = role.id JOIN department ON role.department_id = department.id LEFT JOIN employee B ON A.manager_id = B.id;
-    `;
+    const sql = `SELECT A.id, A.first_name, A.last_name, role.title, department.name AS department, role.salary, concat(B.first_name, ' ', B.last_name) AS manager FROM employee A JOIN role ON A.role_id = role.id JOIN department ON role.department_id = department.id LEFT JOIN employee B ON A.manager_id = B.id;`;
     // const sql = `SELECT concat(first_name, ' ', last_name) AS manager FROM employee WHERE id = 1`;
     db.query(sql, (err, res) => {
         if (err) throw err;
@@ -183,22 +181,22 @@ const addEmployee = () => {
     // Selects all the role names and puts them in a variable
     var roleOptions = [];
 
-    const sql = 'SELECT title FROM role';
+    const sql = 'SELECT * FROM role';
     db.query(sql, (err, res) => {
         if (err) throw err;
         for (let i = 0; i < res.length; i++) {
-            roleOptions.push(res[i].name)
+            roleOptions.push(res[i].title)
         }
     })
 
     // Selects all names of employees
     var managerOptions = [];
 
-    const sql2 = `SELECT concat(first_name, last_name) FROM employee`;
-    db.query(sql2, (err, res) => {
+    const sql1 = `SELECT concat(first_name, ' ', last_name) AS manager FROM employee`;
+    db.query(sql1, (err, res) => {
         if (err) throw err;
-        for (let i = 0; i < res.length; i++) {
-            console.log(res)
+        for (let x = 0; x < res.length; x++) {
+            managerOptions.push(res[x].manager)
         }
     })
     // Questions for user
@@ -227,17 +225,25 @@ const addEmployee = () => {
         }
     ])
     .then ((data) => {
-        // Selects the id associated with the selected role
-        const sql1 = `SELECT id FROM role WHERE title = ${data.role}`
 
-        db.query(sql1, (err, res) => {
+        // Selects the id associated with the selected role
+        const sql2 = `SELECT (SELECT role.id FROM role WHERE title = '${data.role}') AS role_id, (SELECT employee.id FROM employee WHERE concat(first_name, " ", last_name) = '${data.manager}') AS manager_id;`
+
+        db.query(sql2, (err, res) => {
             if (err) throw err;
-            var roleId = res[0].id;
+             var roleId = res[0].role_id;
+             var managerId = res[0].manager_id
 
             // Inputs the first name, last name, and role id
-            const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
-            const params = [data.first_name, data.last_name, roleId]
+            const sql3 = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
+            const params = [data.first_name, data.last_name, roleId, managerId]
+
+            db.query(sql3, params, (err, res) => {
+                if (err) throw err;
+            })
         })
+        console.log(`Added ${data.first_name} ${data.last_name} to the database`)
+        init();
     })
 }
 // -------------- Update an employee role --------------
