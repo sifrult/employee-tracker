@@ -1,7 +1,7 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const express = require('express');
-
+const { query } = require('express');
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -49,8 +49,7 @@ const init = () => {
                 viewRoles();
                 break;
             case 'View all employees':
-                console.log(data.options);
-                init();
+                viewEmployees();
                 break;
             case 'Add a department':
                 addDept();
@@ -93,7 +92,16 @@ const viewRoles = () => {
     })
 }
 // -------------- View all employees --------------
-
+const viewEmployees = () => {
+    const sql = `SELECT A.id, A.first_name, A.last_name, role.title, department.name, role.salary, concat(B.first_name, ' ', B.last_name) AS manager FROM employee A JOIN role ON A.role_id = role.id JOIN department ON role.department_id = department.id LEFT JOIN employee B ON A.manager_id = B.id;
+    `;
+    // const sql = `SELECT concat(first_name, ' ', last_name) AS manager FROM employee WHERE id = 1`;
+    db.query(sql, (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        init();
+    })
+}
 // -------------- Add a department --------------
 const addDept = () => {
     inquirer .prompt([
@@ -109,8 +117,8 @@ const addDept = () => {
 
         db.query(sql, params, (err, res) => {
             if (err) throw err;
-        })
-
+        });
+        console.log(`Added ${data.department} to the database`);
         init();
     });
 }
@@ -164,13 +172,74 @@ const addRole = () => {
                 if (err) throw err;
             })
         })
-
+        console.log(`Added ${data.department} to the database`)
         init();
     });
 }
 
 // -------------- Add an employee --------------
+const addEmployee = () => {
 
+    // Selects all the role names and puts them in a variable
+    var roleOptions = [];
+
+    const sql = 'SELECT title FROM role';
+    db.query(sql, (err, res) => {
+        if (err) throw err;
+        for (let i = 0; i < res.length; i++) {
+            roleOptions.push(res[i].name)
+        }
+    })
+
+    // Selects all names of employees
+    var managerOptions = [];
+
+    const sql2 = `SELECT concat(first_name, last_name) FROM employee`;
+    db.query(sql2, (err, res) => {
+        if (err) throw err;
+        for (let i = 0; i < res.length; i++) {
+            console.log(res)
+        }
+    })
+    // Questions for user
+    inquirer .prompt ([
+        {
+            type: 'input',
+            name: 'first_name',
+            message: "What is the employee's first name?"
+        },
+        {
+            type: 'input',
+            name: 'last_name',
+            message: "What is the employee's last name?"
+        },
+        {
+            type: 'list',
+            name: 'role',
+            message: "What is the employee's role?",
+            choices: roleOptions
+        },
+        {
+            type: 'list',
+            name: 'manager',
+            message: "Who is the employee's manager?",
+            choices: managerOptions
+        }
+    ])
+    .then ((data) => {
+        // Selects the id associated with the selected role
+        const sql1 = `SELECT id FROM role WHERE title = ${data.role}`
+
+        db.query(sql1, (err, res) => {
+            if (err) throw err;
+            var roleId = res[0].id;
+
+            // Inputs the first name, last name, and role id
+            const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
+            const params = [data.first_name, data.last_name, roleId]
+        })
+    })
+}
 // -------------- Update an employee role --------------
 
 // -------------- Runs the program --------------
