@@ -61,8 +61,7 @@ const init = () => {
                 addEmployee();
                 break;
             case 'Update an employee role':
-                console.log(data.options);
-                init();
+                updateRole();
                 break;
             case 'Quit':
                 console.log(data.options);
@@ -90,6 +89,7 @@ const viewRoles = () => {
         init();
     })
 }
+
 // -------------- View all employees --------------
 const viewEmployees = () => {
     const sql = `SELECT A.id, A.first_name, A.last_name, role.title, department.name AS department, role.salary, concat(B.first_name, ' ', B.last_name) AS manager FROM employee A JOIN role ON A.role_id = role.id JOIN department ON role.department_id = department.id LEFT JOIN employee B ON A.manager_id = B.id;`;
@@ -100,6 +100,7 @@ const viewEmployees = () => {
         init();
     })
 }
+
 // -------------- Add a department --------------
 const addDept = () => {
     inquirer .prompt([
@@ -181,7 +182,7 @@ const addEmployee = () => {
     // Selects all the role names and puts them in a variable
     var roleOptions = [];
 
-    const sql = 'SELECT * FROM role';
+    const sql = `SELECT * FROM role`;
     db.query(sql, (err, res) => {
         if (err) throw err;
         for (let i = 0; i < res.length; i++) {
@@ -189,16 +190,17 @@ const addEmployee = () => {
         }
     })
 
-    // Selects all names of employees
+    // Selects all names of employees and puts them in a variable
     var managerOptions = [];
 
-    const sql1 = `SELECT concat(first_name, ' ', last_name) AS manager FROM employee`;
+    const sql1 = `SELECT concat(first_name, ' ', last_name) AS managers FROM employee`;
     db.query(sql1, (err, res) => {
         if (err) throw err;
         for (let x = 0; x < res.length; x++) {
-            managerOptions.push(res[x].manager)
+            managerOptions.push(res[x].managers)
         }
-    })
+    });
+
     // Questions for user
     inquirer .prompt ([
         {
@@ -226,7 +228,7 @@ const addEmployee = () => {
     ])
     .then ((data) => {
 
-        // Selects the id associated with the selected role
+        // Selects the id associated with the selected role and manager
         const sql2 = `SELECT (SELECT role.id FROM role WHERE title = '${data.role}') AS role_id, (SELECT employee.id FROM employee WHERE concat(first_name, " ", last_name) = '${data.manager}') AS manager_id;`
 
         db.query(sql2, (err, res) => {
@@ -234,7 +236,7 @@ const addEmployee = () => {
              var roleId = res[0].role_id;
              var managerId = res[0].manager_id
 
-            // Inputs the first name, last name, and role id
+            // Inputs the first name, last name, role id, and manager id
             const sql3 = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
             const params = [data.first_name, data.last_name, roleId, managerId]
 
@@ -247,6 +249,50 @@ const addEmployee = () => {
     })
 }
 // -------------- Update an employee role --------------
+const updateRole = () => {
+
+    // Selects all the employee names and puts them in a variable
+    var employeeOptions = [];
+
+    const sql = `SELECT concat(first_name, ' ', last_name) AS employees FROM employee`;
+    db.query(sql, (err, res) => {
+        if (err) throw err;
+        for (let x = 0; x < res.length; x++) {
+            employeeOptions.push(res[x].employees)
+        }
+    });
+
+    // Selects all the role names and puts them in a variable
+    var roleOptions = [];
+
+    const sql1 = `SELECT * FROM role`;
+    db.query(sql1, (err, res) => {
+        if (err) throw err;
+        for (let i = 0; i < res.length; i++) {
+            roleOptions.push(res[i].title)
+        }
+    });
+
+    inquirer .prompt ([
+        {
+            type: 'list',
+            name: 'employee',
+            message: "Which employee's role do you want to update?",
+            choices: employeeOptions
+        },
+        {
+            type: 'list',
+            name: 'role',
+            message: 'Which role do you want to assign the selected employee?',
+            choices: roleOptions
+        }
+    ])
+    .then((data) => {
+        console.log("Updated employee's role");
+        console.log(data);
+        init();
+    });
+};
 
 // -------------- Runs the program --------------
 init();
