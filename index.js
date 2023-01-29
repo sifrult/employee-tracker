@@ -2,6 +2,7 @@ const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const express = require('express');
 
+
 const PORT = process.env.PORT || 3001;
 const app = express();
 
@@ -18,12 +19,27 @@ const db = mysql.createConnection(
         password: process.env.MYSQL_PASSWORD,
         database: 'personnel_db'
     },
-    console.log('Connected to the personnel_db database')
+    console.log(`
+    #######
+    #       #    # #####  #       ####  #   # ###### ######
+    #       ##  ## #    # #      #    #  # #  #      #
+    #####   # ## # #    # #      #    #   #   #####  #####
+    #       #    # #####  #      #    #   #   #      #
+    #       #    # #      #      #    #   #   #      #
+    ####### #    # #      ######  ####    #   ###### ######
+
+    #######
+       #    #####    ##    ####  #    # ###### #####
+       #    #    #  #  #  #    # #   #  #      #    #
+       #    #    # #    # #      ####   #####  #    #
+       #    #####  ###### #      #  #   #      #####
+       #    #   #  #    # #    # #   #  #      #   #
+       #    #    # #    #  ####  #    # ###### #    #`)
 );
 
 // Starting point for questions
 const init = () => {
-    console.log("--------------");
+    console.log("\n--------------\n");
     inquirer .prompt([
         {
             type: 'list',
@@ -64,7 +80,7 @@ const init = () => {
                 updateRole();
                 break;
             case 'Quit':
-                console.log(data.options);
+                console.log("Thank you for using Employee Tracker!");
                 process.exit(0);
         }
     })
