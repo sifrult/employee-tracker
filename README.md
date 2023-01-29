@@ -7,7 +7,7 @@ This program allows you to track your employees, their roles, departments, salar
 This program uses Express v4.17.1, Inquirer v8.2.4, and MySQL2 v2.2.5. To install, copy and paste the following into your command line:
 
 ```sh
-npm install
+npm i
 ```
 
 To run the program, use the following command:
