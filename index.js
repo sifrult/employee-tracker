@@ -1,7 +1,6 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const express = require('express');
-const { query } = require('express');
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -65,7 +64,7 @@ const init = () => {
                 break;
             case 'Quit':
                 console.log(data.options);
-                break;
+                process.exit(0);
         }
     })
 }
@@ -93,7 +92,7 @@ const viewRoles = () => {
 // -------------- View all employees --------------
 const viewEmployees = () => {
     const sql = `SELECT A.id, A.first_name, A.last_name, role.title, department.name AS department, role.salary, concat(B.first_name, ' ', B.last_name) AS manager FROM employee A JOIN role ON A.role_id = role.id JOIN department ON role.department_id = department.id LEFT JOIN employee B ON A.manager_id = B.id;`;
-    // const sql = `SELECT concat(first_name, ' ', last_name) AS manager FROM employee WHERE id = 1`;
+
     db.query(sql, (err, res) => {
         if (err) throw err;
         console.table(res);
@@ -156,9 +155,10 @@ const addRole = () => {
         ])
         .then ((data) => {
             // Selects the id associated with the selected department
-            const sql1 = `SELECT id FROM department WHERE name = '${data.department}'`
+            const sql1 = `SELECT id FROM department WHERE name = '?'`
+            const params1 = data.department
 
-            db.query(sql1, (err, res) => {
+            db.query(sql1, params1, (err, res) => {
                 if (err) throw err;
                 var deptId = res[0].id;
 
@@ -170,11 +170,11 @@ const addRole = () => {
                     if (err) throw err;
                 })
             })
-            console.log(`Added ${data.department} to the database`)
+            console.log(`Added ${data.department} to the database`);
             init();
         });
-    })
-}
+    });
+};
 
 // -------------- Add an employee --------------
 const addEmployee = () => {
@@ -227,27 +227,28 @@ const addEmployee = () => {
             .then ((data) => {
 
                 // Selects the id associated with the selected role and manager
-                const sql2 = `SELECT (SELECT role.id FROM role WHERE title = '${data.role}') AS role_id, (SELECT employee.id FROM employee WHERE concat(first_name, " ", last_name) = '${data.manager}') AS manager_id;`
+                const sql2 = `SELECT (SELECT role.id FROM role WHERE title = '?') AS role_id, (SELECT employee.id FROM employee WHERE concat(first_name, " ", last_name) = '?') AS manager_id;`
+                const params2 = [data.role, data.manager];
 
-                db.query(sql2, (err, res) => {
+                db.query(sql2, params2, (err, res) => {
                     if (err) throw err;
                     var roleId = res[0].role_id;
                     var managerId = res[0].manager_id
 
                     // Inputs the first name, last name, role id, and manager id
                     const sql3 = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
-                    const params = [data.first_name, data.last_name, roleId, managerId]
+                    const params3 = [data.first_name, data.last_name, roleId, managerId]
 
-                    db.query(sql3, params, (err, res) => {
+                    db.query(sql3, params3, (err, res) => {
                         if (err) throw err;
                     })
                 })
                 console.log(`Added ${data.first_name} ${data.last_name} to the database`)
                 init();
-            })
+            });
         });
-    })
-}
+    });
+};
 
 // -------------- Update an employee role --------------
 const updateRole = () => {
@@ -290,26 +291,29 @@ const updateRole = () => {
             ])
             .then((data) => {
 
-                const sql2 = `SELECT (SELECT role.id FROM role WHERE title = '${data.role}') AS role_id, (SELECT employee.id FROM employee WHERE concat(first_name, " ", last_name) = '${data.employee}') AS employee_id;`
+                // Selects id associated with selected employee and role
+                const sql2 = `SELECT (SELECT role.id FROM role WHERE title = '?') AS role_id, (SELECT employee.id FROM employee WHERE concat(first_name, " ", last_name) = '?') AS employee_id;`
+                const params2 = [data.role, data.employee];
 
-                db.query(sql2, (err, res) => {
+                db.query(sql2, params2, (err, res) => {
                     if (err) throw err;
                     var roleId = res[0].role_id;
                     var employeeId = res[0].employee_id;
 
-                    const sql3 = `UPDATE employee SET role_id = ${roleId} WHERE id = ${employeeId}`
+                    const sql3 = `UPDATE employee SET role_id = ? WHERE id = ?`;
+                    const params3 = [roleId, employeeId];
 
-                    db.query(sql3, (err, res) => {
+                    db.query(sql3, params3, (err, res) => {
                         if (err) throw err;
-                    })
+                    });
                 })
 
                 console.log("Updated employee's role");
                 init();
             });
         });
-    })
+    });
 };
 
-// -------------- Runs the program --------------
+// -------------- Begins the program --------------
 init();
