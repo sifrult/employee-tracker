@@ -9,6 +9,7 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+
 // Connect to database
 const db = mysql.createConnection(
     {
@@ -155,10 +156,9 @@ const addRole = () => {
         ])
         .then ((data) => {
             // Selects the id associated with the selected department
-            const sql1 = `SELECT id FROM department WHERE name = '?'`
-            const params1 = data.department
+            const sql1 = `SELECT id FROM department WHERE name = '${data.department}'`
 
-            db.query(sql1, params1, (err, res) => {
+            db.query(sql1, (err, res) => {
                 if (err) throw err;
                 var deptId = res[0].id;
 
@@ -227,10 +227,9 @@ const addEmployee = () => {
             .then ((data) => {
 
                 // Selects the id associated with the selected role and manager
-                const sql2 = `SELECT (SELECT role.id FROM role WHERE title = '?') AS role_id, (SELECT employee.id FROM employee WHERE concat(first_name, " ", last_name) = '?') AS manager_id;`
-                const params2 = [data.role, data.manager];
+                const sql2 = `SELECT (SELECT role.id FROM role WHERE title = '${data.role}') AS role_id, (SELECT employee.id FROM employee WHERE concat(first_name, " ", last_name) = '${data.manager}') AS manager_id;`
 
-                db.query(sql2, params2, (err, res) => {
+                db.query(sql2, (err, res) => {
                     if (err) throw err;
                     var roleId = res[0].role_id;
                     var managerId = res[0].manager_id
@@ -292,18 +291,16 @@ const updateRole = () => {
             .then((data) => {
 
                 // Selects id associated with selected employee and role
-                const sql2 = `SELECT (SELECT role.id FROM role WHERE title = '?') AS role_id, (SELECT employee.id FROM employee WHERE concat(first_name, " ", last_name) = '?') AS employee_id;`
-                const params2 = [data.role, data.employee];
+                const sql2 = `SELECT (SELECT role.id FROM role WHERE title = '${data.role}') AS role_id, (SELECT employee.id FROM employee WHERE concat(first_name, " ", last_name) = '${data.employee}') AS employee_id;`
 
-                db.query(sql2, params2, (err, res) => {
+                db.query(sql2, (err, res) => {
                     if (err) throw err;
                     var roleId = res[0].role_id;
                     var employeeId = res[0].employee_id;
 
-                    const sql3 = `UPDATE employee SET role_id = ? WHERE id = ?`;
-                    const params3 = [roleId, employeeId];
+                    const sql3 = `UPDATE employee SET role_id = ${roleId} WHERE id = ${employeeId}`;
 
-                    db.query(sql3, params3, (err, res) => {
+                    db.query(sql3, (err, res) => {
                         if (err) throw err;
                     });
                 })
